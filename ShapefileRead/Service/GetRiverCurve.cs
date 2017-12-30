@@ -17,7 +17,7 @@ namespace Shapefile.Service
 
             foreach (Polyline p in polylineStruct.shpList)
             {
-                for (int i = 0; i < 1 /*p.numParts*/; i++)
+                for (int i = 0; i < 1 /*p.numParts*/; i++)   //由于一个线文件中线太多，取线文件中第一条线
                 {
                     int startpoint;
                     int endpoint;
@@ -33,7 +33,7 @@ namespace Shapefile.Service
                     }
                     //saveString[line++] = "折线" + count.ToString() + ":";
 
-                    for (int j = startpoint; j < endpoint; j++)  //设置起点
+                    for (int j = startpoint; j < endpoint; j++)   //设置起点
                     {
                         List<Point> doublePoint = new List<Point>();
 
@@ -55,7 +55,7 @@ namespace Shapefile.Service
                             }
                             Ratio = D / L;
 
-                            if (Ratio < minRatio)
+                            if (Ratio < minRatio)   //取最小比例的终点
                             {
                                 minRatio = Ratio;
                                 endpo = MarkPoint;
