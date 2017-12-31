@@ -19,29 +19,34 @@ namespace Shapefile.Service
             {
                 for (int i = 0; i < 1 /*p.numParts*/; i++)   //由于一个线文件中线太多，取线文件中第一条线
                 {
-                    int startpoint;
-                    int endpoint;
+                    int startPointIndex;
+                    int endPointIndex;
                     if (i == p.numParts - 1)
                     {
-                        startpoint = (int)p.parts[i];
-                        endpoint = p.numPoints;
+                        startPointIndex = (int)p.parts[i];
+                        endPointIndex = p.numPoints;
                     }
                     else
                     {
-                        startpoint = (int)p.parts[i];
-                        endpoint = (int)p.parts[i + 1];
+                        startPointIndex = (int)p.parts[i];
+                        endPointIndex = (int)p.parts[i + 1];
                     }
                     //saveString[line++] = "折线" + count.ToString() + ":";
 
-                    for (int j = startpoint; j < endpoint; j++)   //设置起点
+                    for (int j = startPointIndex; j < endPointIndex; j++)   //设置曲流颈起点
                     {
-                        List<Point> doublePoint = new List<Point>();
+                        List<Point> FeaturePoint = new List<Point>();
 
-                        Point startpo = (Point)p.points[j];
-                        Point endpo = (Point)p.points[j];                            //终点
+                        Point startpo = (Point)p.points[j];                          //曲流颈起点
+                        Point endpo = (Point)p.points[j];                            //曲流颈终点
+                        Point CentralPoint = new Point();                            //曲流轴起点
+                        Point AxisEndPoint = new Point();                            //曲流轴终点
                         double minRatio = 999.99, limitRatio = 0.005;
+                        int endindex=j;
+                        int axisEndPointIndex = j;
+                        double maxdistance = 0;
 
-                        for (int k = j + 1; k < endpoint; k++)   //找终点
+                        for (int k = j + 1; k < endPointIndex; k++)   //找曲流颈终点
                         {
                             Point MarkPoint = (Point)p.points[k];
                             double D, L = 0;
@@ -59,15 +64,37 @@ namespace Shapefile.Service
                             {
                                 minRatio = Ratio;
                                 endpo = MarkPoint;
+                                endindex = k;
+                            }
+                        }     //找到终点
+
+                        CentralPoint.X = (startpo.X + endpo.X) / 2 ; CentralPoint.Y = (startpo.Y + endpo.Y) / 2;  //取曲流颈中点
+
+                        //找曲流轴
+                        for(int axispointindex = startPointIndex; axispointindex < endindex; axispointindex++)
+                        {
+                            Point temppo = (Point)p.points[axispointindex];
+                            double temdis = Math.Pow(Math.Pow((temppo.X - CentralPoint.X), 2) + Math.Pow((temppo.Y - CentralPoint.Y), 2),0.5);
+
+                            if (temdis > maxdistance)
+                            {
+                                maxdistance = temdis;
+                                axisEndPointIndex = axispointindex;
+                                AxisEndPoint = temppo;
                             }
                         }
 
-                        if (minRatio < limitRatio)    //小于限制比例
+                        if (minRatio < limitRatio)    //小于限制比例，将每个河曲四个特征点加到List里
                         {
-                            doublePoint.Add(startpo);
-                            doublePoint.Add(endpo);
-                            startEndList.Add(doublePoint);   //加到曲流起点终点数组中
+                            FeaturePoint.Add(startpo);     
+                            FeaturePoint.Add(endpo);
+                            FeaturePoint.Add(CentralPoint);
+                            FeaturePoint.Add(AxisEndPoint);
+
+                            startEndList.Add(FeaturePoint);   //加到曲流起点终点数组中
+                            j += (endindex - j) / 4;    //河曲起点往前推进四分之一点数
                         }
+
                     }
                 }
             }
